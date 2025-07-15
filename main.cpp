@@ -1,6 +1,3 @@
-//#include "mainwindow.h"
-//#include "onefilerenderer.h"
-
 #include "onerenderer.h"
 
 #include <QApplication>

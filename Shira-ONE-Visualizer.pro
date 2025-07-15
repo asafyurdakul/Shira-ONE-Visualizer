@@ -7,12 +7,10 @@ CONFIG += c++17
 
 SOURCES += \
     main.cpp \
-    mainwindow.cpp \
     onereader.cpp \
     onerenderer.cpp
 
 HEADERS += \
-    mainwindow.h \
     onereader.h \
     onerenderer.h
 
