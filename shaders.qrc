@@ -1,0 +1,7 @@
+<RCC>
+    <qresource prefix="/">
+        <file>shaders/single.frag</file>
+        <file>shaders/single.vert</file>
+        <file>shaders/nested.frag</file>
+    </qresource>
+</RCC>
