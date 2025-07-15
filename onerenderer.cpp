@@ -217,8 +217,8 @@ void OneRenderer::paintGL() {
             trans[j] = model;
             itrans[j] = model.inverted();
 
-            tj[j] = params.value("EMISSION","1.0").toFloat();// QString::number(globalJScale)).toFloat();
-            tk[j] = params.value("OPACITY", "1.0").toFloat();//QString::number(globalKScale)).toFloat();
+            tj[j] =  QString::number(globalJScale).toFloat();
+            tk[j] = QString::number(globalKScale).toFloat();
             tb[j] = params.value("BLEND", "0.0").toFloat();
             tr[j] = (params.value("REPLACE", "false").toLower() == "true") ? 1 : 0;
 
