@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <vector>
 #include <QDebug>
+#include <climits>  // For INT_MAX, INT_MIN
 
 bool OneReader::load(const QString& filename) {
     QFile file(filename);
@@ -55,7 +56,6 @@ bool OneReader::load(const QString& filename) {
     qint32 numTextures;
     in >> numTextures;
     textures.resize(numTextures);
-
     for (int i = 0; i < numTextures; ++i) {
         Texture& tex = textures[i];
         in >> tex.id;
@@ -81,9 +81,8 @@ bool OneReader::load(const QString& filename) {
         QString type = tex.params.value("TYPE", "");
         tex.isFloat = (type == "RGBA_FLOAT");
 
-        //qDebug() << "Texture ID:" << tex.id << "Name:" << tex.name << "Params:" << tex.params << "Num Voxels:" << numVoxels << "Is Float:" << tex.isFloat;
-
-        int maxX = 0, maxY = 0, maxZ = 0;
+        int minX = INT_MAX, minY = INT_MAX, minZ = INT_MAX;
+        int maxX = INT_MIN, maxY = INT_MIN, maxZ = INT_MIN;
 
         struct VoxelData {
             int x, y, z;
@@ -95,9 +94,12 @@ bool OneReader::load(const QString& filename) {
         for (int v = 0; v < numVoxels; ++v) {
             qint32 x, y, z;
             in >> x >> y >> z;
-            maxX = std::max(maxX, x + 1);
-            maxY = std::max(maxY, y + 1);
-            maxZ = std::max(maxZ, z + 1);
+            minX = std::min(minX, x);
+            minY = std::min(minY, y);
+            minZ = std::min(minZ, z);
+            maxX = std::max(maxX, x);
+            maxY = std::max(maxY, y);
+            maxZ = std::max(maxZ, z);
 
             float r, g, b, a;
             if (tex.isFloat) {
@@ -111,28 +113,37 @@ bool OneReader::load(const QString& filename) {
                 a = ab / 255.0f;
             }
             voxList.push_back({x, y, z, r, g, b, a});
-
-            /*if(i == 0)
-                if (v < 5) { // Log first 5 voxels
-                    qDebug() << "Voxel " << v << ": x=" << x << " y=" << y << " z=" << z << " r=" << r << " g=" << g << " b=" << b << " a=" << a;
-                }*/
         }
-        //qDebug() << "Texture Dimensions: sizeX=" << maxX << " sizeY=" << maxY << " sizeZ=" << maxZ;
 
-        tex.sizeX = maxX;
-        tex.sizeY = maxY;
-        tex.sizeZ = maxZ;
+        tex.sizeX = maxX - minX + 1;
+        tex.sizeY = maxY - minY + 1;
+        tex.sizeZ = maxZ - minZ + 1;
 
-        tex.data.resize(static_cast<size_t>(tex.sizeX) * tex.sizeY * tex.sizeZ * 4, 0.0f);
+        if (tex.isFloat) {
+            tex.data.resize(static_cast<size_t>(tex.sizeX) * tex.sizeY * tex.sizeZ * 4, 0.0f);
+        } else {
+            tex.byteData.resize(static_cast<size_t>(tex.sizeX) * tex.sizeY * tex.sizeZ * 4, 0);
+        }
 
         for (const auto& v : voxList) {
-            size_t index = (static_cast<size_t>(v.z) * tex.sizeY + v.y) * tex.sizeX + v.x;
+            int shifted_x = v.x - minX;
+            int shifted_y = v.y - minY;
+            int shifted_z = v.z - minZ;
+
+            size_t index = (static_cast<size_t>(shifted_z) * tex.sizeY + shifted_y) * tex.sizeX + shifted_x;
             index *= 4;
 
-            tex.data[index] = v.g;
-            tex.data[index + 1] = v.b;
-            tex.data[index + 2] = v.r;
-            tex.data[index + 3] = v.a;
+            if (tex.isFloat) {
+                tex.data[index] = v.g;
+                tex.data[index + 1] = v.b;
+                tex.data[index + 2] = v.r;
+                tex.data[index + 3] = v.a;
+            } else {
+                tex.byteData[index] = static_cast<unsigned char>(v.g * 255.0f);
+                tex.byteData[index + 1] = static_cast<unsigned char>(v.b * 255.0f);
+                tex.byteData[index + 2] = static_cast<unsigned char>(v.r * 255.0f);
+                tex.byteData[index + 3] = static_cast<unsigned char>(v.a * 255.0f);
+            }
         }
 
     }

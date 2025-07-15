@@ -199,20 +199,8 @@ void OneRenderer::paintGL() {
             model.rotate(rz, 0.0f, 0.0f, 1.0f);
             model.translate(-0.5 * ox, -0.5 * oy, -0.5 * oz);
 
-            /*if (j == 3) {
-                float ox = 0.0 ;
-                float oy = 0.2 ;
-                float oz = 0.0 ;
-
-                model.setToIdentity();
-                model.scale(sx, sy, sz);
-                model.rotate(rx, 1.0f, 0.0f, 0.0f);
-                model.rotate(ry, 0.0f, 1.0f, 0.0f);
-                model.rotate(rz, 0.0f, 0.0f, 1.0f);
-                model.translate(ox, oy, oz);
-            }*/
-
-            //qDebug()<<"vol"<<vol.id<<vol.params;
+            qDebug()<<m_reader->scene.name<<m_reader->scene.params;
+            qDebug()<<"vol"<<vol.id<<vol.params;
             //auto* tex = m_reader->getTextureForVolume(m_reader->volumes[idx]);
             //qDebug()<<"tex"<<tex->id<<tex->params;
             //qDebug()<<"tex"<<tex->id<<tex->sizeX<<tex->sizeY<<tex->sizeZ;
@@ -278,8 +266,8 @@ void OneRenderer::paintGL() {
 
         prog.setUniformValue("numEmitters", 0);
         prog.setUniformValue("star_brightness", 0.0f);
-        prog.setUniformValue("backgroundColor", QVector3D(0.5, 0.5, 0.5));
-        //prog.setUniformValue("backgroundColor", QVector3D(0, 0, 0));
+        //prog.setUniformValue("backgroundColor", QVector3D(0.5, 0.5, 0.5));
+        prog.setUniformValue("backgroundColor", QVector3D(0, 0, 0));
 
     }
     else {
