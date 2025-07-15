@@ -1,3 +1,4 @@
+// main.cpp
 #include "onerenderer.h"
 
 #include <QApplication>
@@ -7,6 +8,7 @@
 #include <QVBoxLayout>
 #include <qfiledialog.h>
 #include <QCheckBox>
+#include <QColorDialog>  // EKLE: QColorDialog için
 
 class MyApplication : public QApplication {
 public:
@@ -52,6 +54,10 @@ int main(int argc, char *argv[])
     nestedCheckBox->setChecked(true);
     layout->addWidget(nestedCheckBox);
 
+    // EKLE: Background color seçme butonu
+    QPushButton *colorButton = new QPushButton("Select Background Color", centralWidget);
+    layout->addWidget(colorButton);
+
     OneReader *reader = new OneReader();
 
     QObject::connect(loadButton, &QPushButton::clicked, [&]() {
@@ -73,6 +79,15 @@ int main(int argc, char *argv[])
     });
 
     QObject::connect(nestedCheckBox, &QCheckBox::toggled, renderer, &OneRenderer::setNestedMode);
+
+    // EKLE: Color button connect
+    QObject::connect(colorButton, &QPushButton::clicked, [&]() {
+        QColor color = QColorDialog::getColor(Qt::gray, &window, "Select Background Color");
+        if (color.isValid()) {
+            renderer->setBackgroundColor(QVector3D(color.redF(), color.greenF(), color.blueF()));
+            renderer->update();
+        }
+    });
 
     window.setCentralWidget(centralWidget);
     window.resize(800, 600);

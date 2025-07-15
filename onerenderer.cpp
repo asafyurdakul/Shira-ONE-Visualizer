@@ -42,6 +42,12 @@ void OneRenderer::setNestedMode(bool enable) {
     update();
 }
 
+void OneRenderer::setBackgroundColor(const QVector3D &color)
+{
+    m_backgroundColor = color;
+    update();
+}
+
 QString loadShaderSource(const QString& resourcePath) {
     QFile file(resourcePath);
     if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
@@ -216,6 +222,9 @@ void OneRenderer::paintGL() {
             tb[j] = params.value("BLEND", "0.0").toFloat();
             tr[j] = (params.value("REPLACE", "false").toLower() == "true") ? 1 : 0;
 
+
+            qDebug()<<"jScale"<<tj[j];
+            qDebug()<<"kScale"<<tk[j];
         }
 
         int loc_trans = prog.uniformLocation("texture_transform");
@@ -266,8 +275,7 @@ void OneRenderer::paintGL() {
 
         prog.setUniformValue("numEmitters", 0);
         prog.setUniformValue("star_brightness", 0.0f);
-        //prog.setUniformValue("backgroundColor", QVector3D(0.5, 0.5, 0.5));
-        prog.setUniformValue("backgroundColor", QVector3D(0, 0, 0));
+        prog.setUniformValue("backgroundColor", m_backgroundColor);
 
     }
     else {

@@ -22,6 +22,7 @@ public:
     void setOneReader(OneReader *reader);
     void toggleBounds(bool enable);
     void setNestedMode(bool enable);
+    void setBackgroundColor(const QVector3D &color);
 
 protected:
     void initializeGL() override;
@@ -50,6 +51,7 @@ private:
     bool m_drawBounds = false;
     bool m_nestedMode = false;
     QVector<int> m_sortedVolumeIndices;
+    QVector3D m_backgroundColor = QVector3D(0.5,0.5,0.5);
 
     void createTextures();
     void setupCubeGeometry();
