@@ -1,11 +1,48 @@
-// one_reader.cpp
+// onereader.cpp
 #include "onereader.h"
 #include <algorithm>
 #include <vector>
 #include <QDebug>
 #include <climits>  // For INT_MAX, INT_MIN
 
-bool OneReader::load(const QString& filename) {
+OneReader::OneReader(QObject *parent) : QObject(parent) {}
+
+OneReader::~OneReader() {
+    if (m_watcher) {
+        m_watcher->cancel();
+        m_watcher->waitForFinished();
+        delete m_watcher;
+    }
+}
+
+void OneReader::load(const QString& filename) {
+    if (m_watcher && !m_watcher->isFinished()) {
+        qDebug() << "Loading already in progress.";
+        return;
+    }
+
+    delete m_watcher;
+    m_watcher = new QFutureWatcher<bool>(this);
+
+    connect(m_watcher, &QFutureWatcher<bool>::finished, this, [this]() {
+        bool success = m_watcher->result();
+        emit loadingFinished(success);
+        m_watcher->deleteLater();
+        m_watcher = nullptr;
+    });
+
+    QFuture<bool> future = QtConcurrent::run(this, &OneReader::doLoad, filename);
+    m_watcher->setFuture(future);
+
+    emit loadingStarted();
+}
+
+bool OneReader::doLoad(const QString& filename) {
+    // Önceki verileri tamamen temizle
+    scene = Scene();  // Sıfırla
+    volumes.clear();
+    textures.clear();
+
     QFile file(filename);
     if (!file.open(QIODevice::ReadOnly)) {
         qDebug() << "Failed to open file:" << filename;

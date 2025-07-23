@@ -205,8 +205,10 @@ void OneRenderer::paintGL() {
             model.rotate(rz, 0.0f, 0.0f, 1.0f);
             model.translate(-0.5 * ox, -0.5 * oy, -0.5 * oz);
 
-            qDebug()<<m_reader->scene.name<<m_reader->scene.params;
-            qDebug()<<"vol"<<vol.id<<vol.params;
+
+            qDebug()<<params;
+            //qDebug()<<m_reader->scene.name<<m_reader->scene.params;
+            //qDebug()<<"vol"<<vol.id<<vol.params;
             //auto* tex = m_reader->getTextureForVolume(m_reader->volumes[idx]);
             //qDebug()<<"tex"<<tex->id<<tex->params;
             //qDebug()<<"tex"<<tex->id<<tex->sizeX<<tex->sizeY<<tex->sizeZ;
@@ -217,14 +219,19 @@ void OneRenderer::paintGL() {
             trans[j] = model;
             itrans[j] = model.inverted();
 
-            tj[j] =  QString::number(globalJScale).toFloat();
-            tk[j] = QString::number(globalKScale).toFloat();
+            tj[j] = m_reader->scene.params.value("EXPOSURE").toFloat() / 2.0;
+            //tk[j] = 0.3;// (OPACITY);
+
+            //tj[j] = params.value("EMISSION","1.0").toFloat();
+            tk[j] = params.value("OPACITY","1.0").toFloat();
+
+
             tb[j] = params.value("BLEND", "0.0").toFloat();
             tr[j] = (params.value("REPLACE", "false").toLower() == "true") ? 1 : 0;
 
 
-            qDebug()<<"jScale"<<tj[j];
-            qDebug()<<"kScale"<<tk[j];
+            //qDebug()<<"jScale"<<tj[j];
+            //qDebug()<<"kScale"<<tk[j];
         }
 
         int loc_trans = prog.uniformLocation("texture_transform");
@@ -383,6 +390,9 @@ void OneRenderer::wheelEvent(QWheelEvent *event) {
 }
 
 void OneRenderer::createTextures() {
+    m_numTextures = 0;
+    m_sortedVolumeIndices.clear();
+
     for (int i = 0; i < 10; ++i) {
         if (m_textures[i]) {
             glDeleteTextures(1, &m_textures[i]);

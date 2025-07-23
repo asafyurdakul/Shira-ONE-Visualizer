@@ -23,6 +23,16 @@ uniform float kScale = 1;
 uniform float ds0 = .01; //The step size
 
 uniform vec3 backgroundColor = vec3(0,0,0);
+uniform float exposure = 0.0; // Exposure control (e.g., -2.0 to +2.0 for
+
+// Yeni: Yönlü ışık için uniform'lar
+uniform vec3 lightDir = vec3(0, 0, -1); // Varsayılan yönlü ışık yönü
+uniform vec3 lightColor = vec3(1, 1, 1); // Işık rengi
+uniform float lightIntensity = 1.0; // Işık yoğunluğu
+
+// Yeni: Hacimsel sis için uniform'lar
+uniform float fogDensity = 0.05; // Sis yoğunluğu
+uniform vec3 fogColor = vec3(0.5, 0.5, 0.5); // Sis rengi
 
 out vec4 fragColor;
 
@@ -326,6 +336,35 @@ float phaseFunction(float theta)
     return (v);
 }
 
+// Yeni: Hacimsel sis fonksiyonu
+float calculateFogFactor(float distance) {
+    // Sis yoğunluğuna bağlı olarak eksponansiyel azalma
+    return exp(-fogDensity * distance);
+}
+
+// Yeni: Yüzey normalini yaklaşık olarak hesapla (dokudan gradient ile)
+vec3 calculateNormal(vec3 pos, int textureIndex, float ds) {
+    vec3 texPos = (texture_transform[textureIndex] * vec4(pos, 1)).xyz + 0.5;
+    if (!isValidPosition(texPos)) return vec3(0.0);
+
+    // Merkezi fark yöntemiyle normal hesaplama
+    float delta = ds * 0.5;
+    vec4 jE_x0 = getTexture(textureIndex, texPos - vec3(delta, 0, 0));
+    vec4 jE_x1 = getTexture(textureIndex, texPos + vec3(delta, 0, 0));
+    vec4 jE_y0 = getTexture(textureIndex, texPos - vec3(0, delta, 0));
+    vec4 jE_y1 = getTexture(textureIndex, texPos + vec3(0, delta, 0));
+    vec4 jE_z0 = getTexture(textureIndex, texPos - vec3(0, 0, delta));
+    vec4 jE_z1 = getTexture(textureIndex, texPos + vec3(0, 0, delta));
+
+    // Yoğunluk (alpha) üzerinden gradient
+    vec3 normal = vec3(
+        jE_x1.a - jE_x0.a,
+        jE_y1.a - jE_y0.a,
+        jE_z1.a - jE_z0.a
+    );
+    return normalize(normal);
+}
+
 vec3 scatter(vec3 position, vec4 jE)
 {
     vec3 texPos = position + 0.5; //Figure out where we need to sample the texture from
@@ -405,7 +444,7 @@ vec4 getJ(in vec3 position, inout float ds)
         //Figure out the transparency of this point based on distance from edge of volume
         float weight = blendFactor(texPos, texture_blend[i]) * totalWeight;
 
-        vec4 jETex = getTexture(i, texPos).bgra;     //Get the texture value at this position
+        vec4 jETex = getTexture(i, texPos).brga;     //Get the texture value at this position
         jETex *= weight; //multiply by the transparency.
 
         jEUnscaled += jETex;
@@ -611,4 +650,6 @@ void main()
     }
 
     fragColor = vec4(I, 1);
+
+    //fragColor = vec4(I * pow(2.0, 2.0), 1);
 }

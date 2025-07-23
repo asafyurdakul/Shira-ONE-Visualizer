@@ -51,7 +51,7 @@ private:
     bool m_drawBounds = false;
     bool m_nestedMode = false;
     QVector<int> m_sortedVolumeIndices;
-    QVector3D m_backgroundColor = QVector3D(0.5,0.5,0.5);
+    QVector3D m_backgroundColor = QVector3D(0.0,0.0,0.0);
 
     void createTextures();
     void setupCubeGeometry();

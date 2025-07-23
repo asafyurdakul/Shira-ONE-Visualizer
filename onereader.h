@@ -1,4 +1,4 @@
-// one_reader.h
+// onereader.h
 #ifndef ONEREADER_H
 #define ONEREADER_H
 
@@ -7,9 +7,17 @@
 #include <QVector>
 #include <QFile>
 #include <QDataStream>
+#include <QObject>
+#include <QtConcurrent>
+#include <QFutureWatcher>
 
-class OneReader {
+class OneReader : public QObject {
+    Q_OBJECT
+
 public:
+    explicit OneReader(QObject *parent = nullptr);
+    ~OneReader();
+
     struct Texture {
         qint64 id;
         QString name;
@@ -38,13 +46,21 @@ public:
     QVector<Volume> volumes;
     QVector<Texture> textures;
 
-    bool load(const QString& filename);
+    void load(const QString& filename); // Asynchronous load
 
     Texture* getTextureForVolume(const Volume& vol);
 
+signals:
+    void loadingStarted();
+    void loadingFinished(bool success);
+
 private:
+    bool doLoad(const QString& filename); // Synchronous loading logic
+
     QMap<QString, QString> parseParams(const QString& paramStr);
     QString readString(QDataStream& ds);
+
+    QFutureWatcher<bool> *m_watcher = nullptr;
 };
 
 #endif // ONEREADER_H

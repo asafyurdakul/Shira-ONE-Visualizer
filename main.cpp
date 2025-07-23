@@ -1,14 +1,15 @@
-// main.cpp
+// main.cpp (Güncellenmiş hali)
 #include "onerenderer.h"
+#include "oneloader.h"  // Yeni: Include OneLoader
 
 #include <QApplication>
 #include <QMainWindow>
 #include <QMessageBox>
 #include <QPushButton>
 #include <QVBoxLayout>
-#include <qfiledialog.h>
+#include <QFileDialog>
 #include <QCheckBox>
-#include <QColorDialog>  // EKLE: QColorDialog için
+#include <QColorDialog>
 
 class MyApplication : public QApplication {
 public:
@@ -58,17 +59,31 @@ int main(int argc, char *argv[])
     QPushButton *colorButton = new QPushButton("Select Background Color", centralWidget);
     layout->addWidget(colorButton);
 
-    OneReader *reader = new OneReader();
+    OneLoader *loader = new OneLoader(&window);  // Yeni: OneLoader kullan
 
+    // Asenkron yükleme sinyallerini bağlayın (loader üzerinden)
+    QObject::connect(loader, &OneLoader::loadingStarted, [&]() {
+        loadButton->setEnabled(false);
+        renderer->setOneReader(nullptr);  // Invalidate renderer data during loading
+        // Opsiyonel: Progress gösterme veya bilgilendirme
+        // Örneğin: QMessageBox::information(&window, "Info", "Loading started...");
+    });
+
+    QObject::connect(loader, &OneLoader::loadingFinished, [&](bool success) {
+        loadButton->setEnabled(true);
+        if (success) {
+            renderer->setNestedMode(true);
+            renderer->setOneReader(loader->getReader());  // Yeni: loader->getReader()
+        } else {
+            QMessageBox::warning(&window, "Error", "Failed to load .ONE file.");
+        }
+    });
+
+    // Load butonu bağlantısı (asenkron çağrı)
     QObject::connect(loadButton, &QPushButton::clicked, [&]() {
         QString filename = QFileDialog::getOpenFileName(&window, "Open .ONE File", "", "ONE Files (*.one)");
         if (!filename.isEmpty()) {
-            if (reader->load(filename)) {
-                renderer->setNestedMode(true);
-                renderer->setOneReader(reader);
-            } else {
-                // Handle error, e.g., show message
-            }
+            loader->load(filename);  // Yeni: loader->load()
         }
     });
 
@@ -80,7 +95,6 @@ int main(int argc, char *argv[])
 
     QObject::connect(nestedCheckBox, &QCheckBox::toggled, renderer, &OneRenderer::setNestedMode);
 
-    // EKLE: Color button connect
     QObject::connect(colorButton, &QPushButton::clicked, [&]() {
         QColor color = QColorDialog::getColor(Qt::gray, &window, "Select Background Color");
         if (color.isValid()) {

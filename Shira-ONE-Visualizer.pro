@@ -1,16 +1,19 @@
-QT       += core gui opengl
+QT       += core gui opengl concurrent
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
 CONFIG += c++17
 
+LIBS += -lOpenGL32 -lglu32
 
 SOURCES += \
     main.cpp \
+    oneloader.cpp \
     onereader.cpp \
     onerenderer.cpp
 
 HEADERS += \
+    oneloader.h \
     onereader.h \
     onerenderer.h
 
