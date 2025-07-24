@@ -206,7 +206,7 @@ void OneRenderer::paintGL() {
             model.translate(-0.5 * ox, -0.5 * oy, -0.5 * oz);
 
 
-            qDebug()<<params;
+            //qDebug()<<params;
             //qDebug()<<m_reader->scene.name<<m_reader->scene.params;
             //qDebug()<<"vol"<<vol.id<<vol.params;
             //auto* tex = m_reader->getTextureForVolume(m_reader->volumes[idx]);
@@ -219,12 +219,8 @@ void OneRenderer::paintGL() {
             trans[j] = model;
             itrans[j] = model.inverted();
 
-            tj[j] = m_reader->scene.params.value("EXPOSURE").toFloat() / 2.0;
-            //tk[j] = 0.3;// (OPACITY);
-
-            //tj[j] = params.value("EMISSION","1.0").toFloat();
+            tj[j] = params.value("EMISSION","1.0").toFloat();
             tk[j] = params.value("OPACITY","1.0").toFloat();
-
 
             tb[j] = params.value("BLEND", "0.0").toFloat();
             tr[j] = (params.value("REPLACE", "false").toLower() == "true") ? 1 : 0;
@@ -284,6 +280,8 @@ void OneRenderer::paintGL() {
         prog.setUniformValue("star_brightness", 0.0f);
         prog.setUniformValue("backgroundColor", m_backgroundColor);
 
+        float exposure = m_reader->scene.params.value("EXPOSURE").toFloat() / 2.0;
+        prog.setUniformValue("exposure", exposure);
     }
     else {
         glActiveTexture(GL_TEXTURE0);

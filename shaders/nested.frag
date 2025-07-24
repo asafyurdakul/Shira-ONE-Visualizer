@@ -25,15 +25,6 @@ uniform float ds0 = .01; //The step size
 uniform vec3 backgroundColor = vec3(0,0,0);
 uniform float exposure = 0.0; // Exposure control (e.g., -2.0 to +2.0 for
 
-// Yeni: Yönlü ışık için uniform'lar
-uniform vec3 lightDir = vec3(0, 0, -1); // Varsayılan yönlü ışık yönü
-uniform vec3 lightColor = vec3(1, 1, 1); // Işık rengi
-uniform float lightIntensity = 1.0; // Işık yoğunluğu
-
-// Yeni: Hacimsel sis için uniform'lar
-uniform float fogDensity = 0.05; // Sis yoğunluğu
-uniform vec3 fogColor = vec3(0.5, 0.5, 0.5); // Sis rengi
-
 out vec4 fragColor;
 
 in vec3 cameraPos;
@@ -336,11 +327,6 @@ float phaseFunction(float theta)
     return (v);
 }
 
-// Yeni: Hacimsel sis fonksiyonu
-float calculateFogFactor(float distance) {
-    // Sis yoğunluğuna bağlı olarak eksponansiyel azalma
-    return exp(-fogDensity * distance);
-}
 
 // Yeni: Yüzey normalini yaklaşık olarak hesapla (dokudan gradient ile)
 vec3 calculateNormal(vec3 pos, int textureIndex, float ds) {
@@ -649,7 +635,5 @@ void main()
         I = rayTransfer(ray_origin, ray_direction, I, t0, t1);
     }
 
-    fragColor = vec4(I, 1);
-
-    //fragColor = vec4(I * pow(2.0, 2.0), 1);
+    fragColor = vec4(I * exposure, 1);
 }
